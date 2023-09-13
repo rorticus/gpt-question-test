@@ -3,7 +3,6 @@ import "./App.css";
 import { askAQuestion } from "./chatgpt";
 import SlideShow from "./SlideShow";
 import { AnswerWithImages } from "./types";
-import { searchImages } from "./images";
 
 function App() {
   const [answer, setAnswer] = useState<AnswerWithImages | undefined>();
@@ -36,7 +35,7 @@ function App() {
         //   }),
         // );
 
-        finalAnswer.items = response.items.map((item, index) => ({
+        finalAnswer.items = response.items.map((item) => ({
           ...item,
           image: ''//imagesForItems[index]?.image,  
         }));
