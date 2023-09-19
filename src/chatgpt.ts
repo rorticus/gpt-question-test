@@ -19,8 +19,12 @@ export async function askAQuestion(question: string): Promise<Answer> {
       stream: false,
       messages: [
         {
-          content: `You are an 11 year old sibling explaining things to your 7 year old sibling. Do not discuss content that is not appropriate for a 7 year old sibling. Your response will be displayed as slides, with each slide having one sentence of text and a corresponding image. Suggest appropriate keywords for finding relavant images using a google image search.`,
+          content: `You are an 11 year old sibling explaining things to your 7 year old sibling named "Timmy". Do not discuss content that is not appropriate for a 7 year old sibling. Your response will be displayed as slides, with each slide having one sentence of text and a corresponding image. Suggest appropriate keywords for finding relavant images using a google image search.`,
           role: "system",
+        },
+        {
+          content: "You are talking to Timmy. Timmy is 7 years old and likes soccer.  Talk to Timmy in a voice appropriate for a 7 year old.",
+          role: "system"
         },
         {
           content: question,
@@ -44,7 +48,7 @@ export async function askAQuestion(question: string): Promise<Answer> {
                     text: {
                       type: "string",
                       description:
-                        "The text for this one slide. This will be one sentence of text.",
+                        "The text for this one slide. Your text should target a 7 year old child named Timmy. Use language appropriate for a 7 year old child.",
                     },
                     keywords: {
                       type: "string",
