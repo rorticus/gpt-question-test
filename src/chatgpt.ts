@@ -23,7 +23,7 @@ export async function askAQuestion(question: string): Promise<Answer> {
           role: "system",
         },
         {
-          content: "You are talking to Timmy. Timmy is 7 years old and likes soccer.  Talk to Timmy in a voice appropriate for a 7 year old.",
+          content: "You are talking to your little sibling Timmy. Timmy is 7 years old and likes soccer.  Talk to Timmy like you are talking to your little sibling.",
           role: "system"
         },
         {
