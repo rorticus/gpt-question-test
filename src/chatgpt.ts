@@ -1,6 +1,6 @@
-export interface Answer {
-  items: Slide[];
-  is_appropriate: boolean;
+export interface PromptResponse {
+  activity: "ask_question" | "search_images" | "search_videos";
+  query: string;
 }
 
 export interface Slide {
@@ -8,7 +8,9 @@ export interface Slide {
   keywords: string;
 }
 
-export async function askAQuestion(question: string): Promise<Answer> {
+export type Answer = Slide[];
+
+export async function prompt(question: string): Promise<PromptResponse> {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -19,55 +21,36 @@ export async function askAQuestion(question: string): Promise<Answer> {
       stream: false,
       messages: [
         {
-          content: `You are an 11 year old sibling explaining things to your 7 year old sibling named "Timmy". Do not discuss content that is not appropriate for a 7 year old sibling. Your response will be displayed as slides, with each slide having one sentence of text and a corresponding image. Suggest appropriate keywords for finding relavant images using a google image search.`,
+          content: `You are an 11 year old sibling explaining things to your 7 year old sibling named "Timmy". Do not discuss content that is not appropriate for a 7 year old sibling.`,
           role: "system",
-        },
-        {
-          content: "You are talking to your little sibling Timmy. Timmy is 7 years old and likes soccer.  Talk to Timmy like you are talking to your little sibling.",
-          role: "system"
         },
         {
           content: question,
           role: "user",
         },
       ],
-      function_call: { name: "add_slides" },
       functions: [
         {
-          name: "add_slides",
-          description: "Use this function to add a slides to the response.",
+          name: "perform_activity",
+          description: "Perform an activity on behalf of the user",
           parameters: {
             type: "object",
             properties: {
-              items: {
-                type: "array",
-                items: {
-                  type: "object",
-                  description: "The information for one single slide.",
-                  properties: {
-                    text: {
-                      type: "string",
-                      description:
-                        "The text for this one slide. Your text should target a 7 year old child named Timmy. Use language appropriate for a 7 year old child.",
-                    },
-                    keywords: {
-                      type: "string",
-                      description:
-                        "Suggested keywords to search for to find a relavant image for the slide",
-                    },
-                  },
-                },
-              },
-              is_appropriate: {
-                type: "boolean",
+              activity: {
+                type: "string",
                 description:
-                  "Whether or not this question is appropriate for a 7 year old.",
+                  "one of 'search_images', 'search_videos', or 'ask_question'",
+              },
+              query: {
+                type: "string",
+                description: "the query to send",
               },
             },
-            required: ["items", "is_appropriate"],
+            required: ["activity", "query"],
           },
         },
       ],
+      function_call: { name: "perform_activity" },
       model: "gpt-3.5-turbo",
     }),
   });
@@ -75,4 +58,47 @@ export async function askAQuestion(question: string): Promise<Answer> {
   const json = await response.json();
 
   return JSON.parse(json.choices[0].message.function_call.arguments);
+}
+
+export async function askQuestion(question: string): Promise<Answer> {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${import.meta.env.VITE_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      stream: false,
+      messages: [
+        {
+          content: `You are an 11 year old sibling explaining things to your 7 year old sibling named "Timmy". Do not discuss content that is not appropriate for a 7 year old sibling.`,
+          role: "system",
+        },
+        {
+          content: `The content should separated into 1 sentence slides for a presentation and should be a JSON format like the following,
+          
+          [
+            {
+              "text": "slide text",
+              "keywords": "cat, in, tree"
+            }
+          ]
+
+          text should be the slide text.
+          keywords should be a list of keywords one could use to find images relevant to the slide.
+          `,
+          role: "system",
+        },
+        {
+          content: question,
+          role: "user",
+        },
+      ],
+      model: "gpt-4",
+    }),
+  });
+
+  const json = await response.json();
+
+  return JSON.parse(json.choices[0].message.content);
 }
